@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment variables
+.env
+*.env
+
+# Model outputs
+adapter/
+*.safetensors
+*.bin
+
+# Vector indexes
+faiss_index_bge_m3/
+*.faiss
+*.pkl
+
+# Cache
+.cache/
+huggingface/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,56 @@
+============================================================
+ST17 서비스 매뉴얼 QA - 실행 방법
+============================================================
+
+[0] 사전 준비 (Docker 컨테이너)
+------------------------------------------------------------
+# 이미지 빌드
+docker build -t finalexam-gpu .
+
+# 컨테이너 실행 (현재 폴더를 /workspace로 마운트)
+docker run --gpus all -it --name finalexam-gpu -v $(pwd):/workspace finalexam-gpu
+
+# GPU 인식 확인
+nvidia-smi
+python -c "import torch; print(torch.cuda.is_available())"   # → True
+
+
+[1] RAG 대화형 실행  ★ 기본 사용법
+------------------------------------------------------------
+python ask.py
+
+  - 실행하면 'Q:' 프롬프트가 뜹니다. 한국어로 질문을 입력하세요.
+  - 미리 빌드된 인덱스(faiss_index_bge_m3/)와 파인튜닝 어댑터(adapter/)를
+    자동으로 불러와 답변합니다.
+  - 종료: q 입력 또는 빈 줄에서 Enter
+  - API 키 불필요 (생성은 로컬 GPU에서 수행)
+
+  예시)
+    Q: 스크럽 브러시는 얼마나 자주 교체해야 하나요?
+    A: ...(생성된 답변)...
+      [참조 페이지] 1. p95-95 ...
+
+
+[2] 단발성 질문 (인자 1개로 바로 답변)
+------------------------------------------------------------
+python rag_pipeline.py "구동 모터가 작동하지 않을 때 점검 순서는?"
+
+
+[3] RAG 성능 평가 (Recall@5, 답변 정확도)
+------------------------------------------------------------
+export ANTHROPIC_API_KEY=sk-...        # judge(Claude)용. 없으면 의미유사도 폴백
+python rag_eval.py                      # → rag_results.json 저장
+
+  결과(현재 제출본): Recall@5 = 0.9067 / 답변정확도 = 0.5733
+
+
+[4] (재현용) 데이터셋 재생성 & 재학습
+------------------------------------------------------------
+export ANTHROPIC_API_KEY=sk-...
+python build_korean_dataset.py          # → train_dataset.jsonl, eval_dataset.jsonl
+python finetune.py                      # → adapter/, loss_curve.png, training_report.md (~25분)
+
+
+[참고] 첫 실행 시 임베딩 모델 BAAI/bge-m3(~2GB)를 내려받습니다(인터넷 필요).
+       faiss_index_bge_m3/ 폴더가 있으면 재빌드 없이 그대로 로드합니다.
+============================================================
